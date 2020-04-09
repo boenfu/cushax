@@ -1,0 +1,30 @@
+{
+  "name": "cushax",
+  "version": "0.1.0",
+  "author": "boenfu <1997@boenfu.cn>",
+  "license": "MIT",
+  "private": false,
+  "main": "lib/main.js",
+  "module": "lib/main.js",
+  "types": "lib/main.d.ts",
+  "scripts": {
+    "dev": "cross-env NODE_ENV=development && tsnd  --respawn --transpileOnly --no-notify ./src/app.ts",
+    "build": "tsc"
+  },
+  "files": [
+    "lib"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/boenfu/cushax.git"
+  },
+  "bugs": {
+    "url": "https://github.com/boenfu/cushax/issues"
+  },
+  "homepage": "https://github.com/boenfu/cushax#readme",
+  "devDependencies": {
+    "cross-env": "^7.0.2",
+    "ts-node-dev": "^1.0.0-pre.44",
+    "typescript": "^3.8.3"
+  }
+}
