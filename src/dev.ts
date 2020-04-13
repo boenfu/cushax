@@ -1,11 +1,7 @@
 import SocketIO from "socket.io";
-import { Module } from "vuex";
+import { Schema } from "cushax-schema";
 
 import Cushax from "./main";
-
-export function Schema<S extends Module<any, any>>(s: S): S {
-  return s;
-}
 
 const io = SocketIO();
 

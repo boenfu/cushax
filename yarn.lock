@@ -168,6 +168,11 @@ currently-unhandled@^0.4.1:
   dependencies:
     array-find-index "^1.0.1"
 
+cushax-schema@^0.1.0:
+  version "0.1.0"
+  resolved "https://registry.yarnpkg.com/cushax-schema/-/cushax-schema-0.1.0.tgz#e9410a156d582994c41f0ba68c78a525aca51fd3"
+  integrity sha512-htsoPAm36R6jFkeN3zlP5WckU5XqQP4QE8/UeugqbEd6lC4UEzdz00Wcvf9TozSxV3IM11LKM4df5BZhyOdssQ==
+
 dateformat@~1.0.4-1.2.3:
   version "1.0.12"
   resolved "https://registry.yarnpkg.com/dateformat/-/dateformat-1.0.12.tgz#9f124b67594c937ff706932e4a642cca8dbbfee9"
