@@ -8,6 +8,7 @@
     "rootDir": "./src",
     "listFiles": true,
     "strict": true,
+    "downlevelIteration": true,
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
     "allowJs": true,

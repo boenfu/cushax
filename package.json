@@ -8,7 +8,7 @@
   "module": "lib/main.js",
   "types": "lib/main.d.ts",
   "scripts": {
-    "dev": "cross-env NODE_ENV=development && tsnd  --respawn --transpileOnly --no-notify ./src/app.ts",
+    "dev": "cross-env NODE_ENV=development && tsnd  --respawn --transpileOnly --no-notify ./src/dev.ts",
     "build": "tsc"
   },
   "files": [
