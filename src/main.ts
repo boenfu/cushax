@@ -20,6 +20,7 @@ export default class Cushax<TSchema extends CushaxSchema> {
 
     this.namespace.on("connection", (socket) => {
       socket.on("page:sync", (event) => this.onPageSync(socket, event));
+      socket.on("page:event", (event) => this.onPageEvent(socket, event));
     });
   }
 
@@ -69,6 +70,31 @@ export default class Cushax<TSchema extends CushaxSchema> {
           .get(update.page)
           ?.update?.(update.payload, this.getPage(socket, update.page));
       }
+    } catch (error) {
+      this.resetPage(
+        socket,
+        ...Object.values(event)
+          .map(({ page }) => page)
+          .filter((page): page is string => !!page)
+      );
+    }
+  };
+
+  private onPageEvent = (socket: Socket, event: PageEventEvent) => {
+    try {
+      let {
+        page: { page, payload },
+        event: eventName,
+        data,
+      } = event;
+
+      let map = this.pageNameToOptionsMap;
+
+      (map.get(page) as any)?.[eventName]?.(
+        data,
+        payload,
+        this.getPage(socket, page)
+      );
     } catch (error) {
       console.log(error);
 
@@ -138,6 +164,22 @@ export type Payload<
   ? { params: P; query: Q }
   : never;
 
+export type PageEvent<
+  TSchema extends CushaxSchema,
+  TD = Pick<TSchema["state"], "$event">
+> = UnionToIntersection<TD> extends { $event: infer E }
+  ? {
+      /**
+       * custom events
+       */
+      [TKey in keyof E]: (
+        data: E[TKey],
+        payload: Payload<TSchema>,
+        page: Page<TSchema>
+      ) => void;
+    }
+  : never;
+
 export type PageOptions<
   TSchema extends CushaxSchema,
   TSchemaPair = ObjectPropertyToPair<
@@ -147,13 +189,18 @@ export type PageOptions<
   >
 > = TSchemaPair extends [infer TName, infer TModule]
   ? {
-      // from route name or  route meta: { cushax: "hello-world" }
+      /**
+       * From route name or  route meta: { cushax: "hello-world" }
+       */
       name: TName;
       enter?(payload: Payload<TModule>, page: Page<TModule>): void;
       leave?(payload: Payload<TModule>, page: Page<TModule>): void;
       update?(payload: Payload<TModule>, page: Page<TModule>): void;
+      /**
+       * `true` will keep state after router leave
+       */
       keep?: boolean;
-    }
+    } & PageEvent<TModule>
   : never;
 
 export interface PageSyncEvent<TSchema = any> {
@@ -169,4 +216,13 @@ export interface PageSyncEvent<TSchema = any> {
     page: string;
     payload: Payload<TSchema>;
   };
+}
+
+export interface PageEventEvent<TSchema = any> {
+  event: string;
+  page: {
+    page: string;
+    payload: Payload<TSchema>;
+  };
+  data: any;
 }

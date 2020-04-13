@@ -15,8 +15,11 @@
     "skipDefaultLibCheck": true,
     "skipLibCheck": true,
     "moduleResolution": "node",
+    "noImplicitAny": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
     "forceConsistentCasingInFileNames": true,
     "lib": ["DOM", "ESNext"]
   },
-  "include": ["src"]
+  "include": ["src/main.ts"]
 }
