@@ -50,14 +50,18 @@ export default class Cushax<TSchema extends CushaxSchema> {
       if (enter) {
         map
           .get(enter.page)
-          ?.enter?.(enter.payload, this.getPage(socket, enter.page));
+          ?.enter?.(enter.payload, this.getPage(socket, enter.page), socket);
       }
 
       if (leave) {
         let options = map.get(leave.page);
 
         if (options) {
-          options.leave?.(leave.payload, this.getPage(socket, leave.page));
+          options.leave?.(
+            leave.payload,
+            this.getPage(socket, leave.page),
+            socket
+          );
 
           if (!options.keep) {
             this.resetPage(socket, options.name as string);
@@ -68,7 +72,7 @@ export default class Cushax<TSchema extends CushaxSchema> {
       if (update) {
         map
           .get(update.page)
-          ?.update?.(update.payload, this.getPage(socket, update.page));
+          ?.update?.(update.payload, this.getPage(socket, update.page), socket);
       }
     } catch (error) {
       this.resetPage(
@@ -93,7 +97,8 @@ export default class Cushax<TSchema extends CushaxSchema> {
       (map.get(page) as any)?.[eventName]?.(
         data,
         payload,
-        this.getPage(socket, page)
+        this.getPage(socket, page),
+        socket
       );
     } catch (error) {
       console.log(error);
@@ -175,7 +180,8 @@ export type PageEvent<
       [TKey in keyof E]: (
         data: E[TKey],
         payload: Payload<TSchema>,
-        page: Page<TSchema>
+        page: Page<TSchema>,
+        socket: Socket
       ) => void;
     }
   : never;
@@ -193,9 +199,21 @@ export type PageOptions<
        * From route name or  route meta: { cushax: "hello-world" }
        */
       name: TName;
-      enter?(payload: Payload<TModule>, page: Page<TModule>): void;
-      leave?(payload: Payload<TModule>, page: Page<TModule>): void;
-      update?(payload: Payload<TModule>, page: Page<TModule>): void;
+      enter?(
+        payload: Payload<TModule>,
+        page: Page<TModule>,
+        socket: Socket
+      ): void;
+      leave?(
+        payload: Payload<TModule>,
+        page: Page<TModule>,
+        socket: Socket
+      ): void;
+      update?(
+        payload: Payload<TModule>,
+        page: Page<TModule>,
+        socket: Socket
+      ): void;
       /**
        * `true` will keep state after router leave
        */
@@ -203,26 +221,19 @@ export type PageOptions<
     } & PageEvent<TModule>
   : never;
 
+export interface PageInfo<TSchema> {
+  page: string;
+  payload: Payload<TSchema>;
+}
+
 export interface PageSyncEvent<TSchema = any> {
-  enter?: {
-    page: string;
-    payload: Payload<TSchema>;
-  };
-  update?: {
-    page: string;
-    payload: Payload<TSchema>;
-  };
-  leave?: {
-    page: string;
-    payload: Payload<TSchema>;
-  };
+  enter?: PageInfo<TSchema>;
+  update?: PageInfo<TSchema>;
+  leave?: PageInfo<TSchema>;
 }
 
 export interface PageEventEvent<TSchema = any> {
   event: string;
-  page: {
-    page: string;
-    payload: Payload<TSchema>;
-  };
+  page: PageInfo<TSchema>;
   data: any;
 }
