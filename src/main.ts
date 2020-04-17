@@ -48,20 +48,22 @@ export default class Cushax<TSchema extends CushaxSchema> {
       let map = this.pageNameToOptionsMap;
 
       if (enter) {
-        map
-          .get(enter.page)
-          ?.enter?.(enter.payload, this.getPage(socket, enter.page), socket);
+        map.get(enter.page)?.enter?.({
+          payload: enter.payload,
+          page: this.getPage(socket, enter.page),
+          socket,
+        });
       }
 
       if (leave) {
         let options = map.get(leave.page);
 
         if (options) {
-          options.leave?.(
-            leave.payload,
-            this.getPage(socket, leave.page),
-            socket
-          );
+          options.leave?.({
+            payload: leave.payload,
+            page: this.getPage(socket, leave.page),
+            socket,
+          });
 
           if (!options.keep) {
             this.resetPage(socket, options.name as string);
@@ -70,9 +72,11 @@ export default class Cushax<TSchema extends CushaxSchema> {
       }
 
       if (update) {
-        map
-          .get(update.page)
-          ?.update?.(update.payload, this.getPage(socket, update.page), socket);
+        map.get(update.page)?.update?.({
+          payload: update.payload,
+          page: this.getPage(socket, update.page),
+          socket,
+        });
       }
     } catch (error) {
       this.resetPage(
@@ -94,15 +98,13 @@ export default class Cushax<TSchema extends CushaxSchema> {
 
       let map = this.pageNameToOptionsMap;
 
-      (map.get(page) as any)?.[eventName]?.(
+      (map.get(page) as any)?.[eventName]?.({
         data,
         payload,
-        this.getPage(socket, page),
-        socket
-      );
+        page: this.getPage(socket, page),
+        socket,
+      });
     } catch (error) {
-      console.log(error);
-
       this.resetPage(
         socket,
         ...Object.values(event)
@@ -169,7 +171,7 @@ export type Payload<
   ? { params: P; query: Q }
   : never;
 
-export type PageEvent<
+export type PageCustomEvent<
   TSchema extends CushaxSchema,
   TD = Pick<TSchema["state"], "$event">
 > = UnionToIntersection<TD> extends { $event: infer E }
@@ -177,12 +179,12 @@ export type PageEvent<
       /**
        * custom events
        */
-      [TKey in keyof E]: (
-        data: E[TKey],
-        payload: Payload<TSchema>,
-        page: Page<TSchema>,
-        socket: Socket
-      ) => void;
+      [TKey in keyof E]: (event: {
+        data: E[TKey];
+        payload: Payload<TSchema>;
+        page: Page<TSchema>;
+        socket: Socket;
+      }) => void;
     }
   : never;
 
@@ -199,41 +201,43 @@ export type PageOptions<
        * From route name or  route meta: { cushax: "hello-world" }
        */
       name: TName;
-      enter?(
-        payload: Payload<TModule>,
-        page: Page<TModule>,
-        socket: Socket
-      ): void;
-      leave?(
-        payload: Payload<TModule>,
-        page: Page<TModule>,
-        socket: Socket
-      ): void;
-      update?(
-        payload: Payload<TModule>,
-        page: Page<TModule>,
-        socket: Socket
-      ): void;
+      enter?(event: {
+        payload: Payload<TModule>;
+        page: Page<TModule>;
+        socket: Socket;
+      }): void;
+      leave?(event: {
+        payload: Payload<TModule>;
+        page: Page<TModule>;
+        socket: Socket;
+      }): void;
+      update?(event: {
+        payload: Payload<TModule>;
+        page: Page<TModule>;
+        socket: Socket;
+      }): void;
       /**
        * `true` will keep state after router leave
        */
       keep?: boolean;
-    } & PageEvent<TModule>
+    } & PageCustomEvent<TModule>
   : never;
 
-export interface PageInfo<TSchema> {
+// internal use
+
+interface PageInfo {
   page: string;
-  payload: Payload<TSchema>;
+  payload: Payload<any>;
 }
 
-export interface PageSyncEvent<TSchema = any> {
-  enter?: PageInfo<TSchema>;
-  update?: PageInfo<TSchema>;
-  leave?: PageInfo<TSchema>;
+interface PageSyncEvent {
+  enter?: PageInfo;
+  update?: PageInfo;
+  leave?: PageInfo;
 }
 
-export interface PageEventEvent<TSchema = any> {
+interface PageEventEvent {
   event: string;
-  page: PageInfo<TSchema>;
+  page: PageInfo;
   data: any;
 }

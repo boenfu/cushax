@@ -9,7 +9,6 @@
   "types": "lib/main.d.ts",
   "scripts": {
     "prepublish": "yarn build",
-    "dev": "cross-env NODE_ENV=development && tsnd  --respawn --transpileOnly --no-notify ./src/dev.ts",
     "build": "tsc"
   },
   "files": [
@@ -24,9 +23,7 @@
   },
   "homepage": "https://github.com/boenfu/cushax#readme",
   "devDependencies": {
-    "cross-env": "^7.0.2",
     "cushax-schema": "^0.1.0",
-    "ts-node-dev": "^1.0.0-pre.44",
     "typescript": "^3.8.3",
     "vuex": "^3.1.3"
   },
