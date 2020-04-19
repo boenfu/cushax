@@ -231,7 +231,7 @@ export type PageCustomEvent<
 
 export type AuthFunction<TSchema extends CushaxSchema> = (
   data: TSchema["state"]["$auth"]
-) => boolean;
+) => boolean | Promise<boolean>;
 
 export type PageOptions<
   TSchema extends CushaxSchema,
