@@ -5,8 +5,16 @@ export type CushaxSchema = Module<any, any>;
 
 export type SocketIdentity = Socket | Socket["id"];
 
+declare module "socket.io" {
+  interface Socket {
+    $cushax_verified: boolean;
+  }
+}
+
 export default class Cushax<TSchema extends CushaxSchema> {
   private pageNameToOptionsMap = new Map<string, PageOptions<TSchema>>();
+  private authFns: AuthFunction<TSchema>[] = [];
+
   private namespace: SocketIO.Namespace;
 
   get commit(): Page<TSchema, SocketIdentity> extends { commit: infer TCommit }
@@ -19,13 +27,28 @@ export default class Cushax<TSchema extends CushaxSchema> {
     this.namespace = this.server.of("/cushax");
 
     this.namespace.on("connection", (socket) => {
-      socket.on("page:sync", (event) => this.onPageSync(socket, event));
-      socket.on("page:event", (event) => this.onPageEvent(socket, event));
+      socket.on("auth", (event) => this.onAuth(socket, event));
+      socket.on(
+        "page:sync",
+        (event) => this._checkAuth(socket) && this.onPageSync(socket, event)
+      );
+      socket.on(
+        "page:event",
+        (event) => this._checkAuth(socket) && this.onPageEvent(socket, event)
+      );
     });
+  }
+
+  auth(fn: AuthFunction<TSchema>): void {
+    this.authFns.push(fn);
   }
 
   page(options: PageOptions<TSchema>): void {
     this.pageNameToOptionsMap.set(options.name as string, options);
+  }
+
+  private _checkAuth(socket: Socket): boolean {
+    return !this.authFns.length || socket.$cushax_verified;
   }
 
   private _commit(
@@ -40,6 +63,24 @@ export default class Cushax<TSchema extends CushaxSchema> {
       this.namespace.emit("commit", name, payload);
     }
   }
+
+  private onAuth = async (socket: Socket, event: any) => {
+    try {
+      for (let fn of this.authFns) {
+        let passed = await fn.call(undefined, event);
+
+        if (!passed) {
+          throw Error();
+        }
+      }
+
+      socket.$cushax_verified = true;
+      socket.emit("auth", true);
+    } catch (error) {
+      socket.$cushax_verified = false;
+      socket.emit("auth", false);
+    }
+  };
 
   private onPageSync = (socket: Socket, event: PageSyncEvent) => {
     try {
@@ -166,15 +207,15 @@ export type Page<
 
 export type Payload<
   TSchema extends CushaxSchema,
-  TD = Pick<TSchema["state"], "$params" | "$query">
-> = UnionToIntersection<TD> extends { $params: infer P; $query: infer Q }
+  TData = Pick<TSchema["state"], "$params" | "$query">
+> = UnionToIntersection<TData> extends { $params: infer P; $query: infer Q }
   ? { params: P; query: Q }
   : never;
 
 export type PageCustomEvent<
   TSchema extends CushaxSchema,
-  TD = Pick<TSchema["state"], "$event">
-> = UnionToIntersection<TD> extends { $event: infer E }
+  TEvent = Pick<TSchema["state"], "$event">
+> = UnionToIntersection<TEvent> extends { $event: infer E }
   ? {
       /**
        * custom events
@@ -187,6 +228,11 @@ export type PageCustomEvent<
       }) => void;
     }
   : never;
+
+export type AuthFunction<
+  TSchema extends CushaxSchema,
+  TAuth = Pick<TSchema["state"], "$auth">
+> = (data: TAuth) => boolean;
 
 export type PageOptions<
   TSchema extends CushaxSchema,
