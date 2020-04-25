@@ -8,6 +8,7 @@ export type SocketIdentity = Socket | Socket["id"];
 declare module "socket.io" {
   interface Socket {
     $cushax_verified: boolean;
+    $cushax_context: any;
   }
 }
 
@@ -67,7 +68,7 @@ export default class Cushax<TSchema extends CushaxSchema> {
   private onAuth = async (socket: Socket, event: any) => {
     try {
       for (let fn of this.authFns) {
-        let passed = await fn.call(undefined, event);
+        let passed = await fn.call(undefined, event, socket);
 
         if (!passed) {
           throw Error();
@@ -230,7 +231,8 @@ export type PageCustomEvent<
   : never;
 
 export type AuthFunction<TSchema extends CushaxSchema> = (
-  data: TSchema["state"]["$auth"]
+  data: TSchema["state"]["$auth"],
+  socket: Socket
 ) => boolean | Promise<boolean>;
 
 export type PageOptions<
