@@ -118,11 +118,15 @@ export default class Cushax<TSchema extends CushaxSchema> {
       }
 
       if (update) {
-        map.get(update.page)?.update?.({
+        let updatePage = update.page;
+
+        await map.get(updatePage)?.update?.({
           payload: update.payload,
           page: this.getPage(socket, update.page),
           socket,
         });
+
+        socket.emit("page:updated", updatePage);
       }
     } catch (error) {
       this.resetPage(
