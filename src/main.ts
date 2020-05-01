@@ -83,18 +83,22 @@ export default class Cushax<TSchema extends CushaxSchema> {
     }
   };
 
-  private onPageSync = (socket: Socket, event: PageSyncEvent) => {
+  private onPageSync = async (socket: Socket, event: PageSyncEvent) => {
     try {
       let { enter, leave, update } = event;
 
       let map = this.pageNameToOptionsMap;
 
       if (enter) {
-        map.get(enter.page)?.enter?.({
+        let enterPage = enter.page;
+
+        await map.get(enterPage)?.enter?.({
           payload: enter.payload,
           page: this.getPage(socket, enter.page),
           socket,
         });
+
+        socket.emit("page:entered", enterPage);
       }
 
       if (leave) {
