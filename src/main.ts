@@ -111,7 +111,7 @@ export default class Cushax<TSchema extends CushaxSchema> {
             socket,
           });
 
-          if (!options.keep) {
+          if (!options.keep && enter?.page !== leave.page) {
             this.resetPage(socket, options.name as string);
           }
         }
